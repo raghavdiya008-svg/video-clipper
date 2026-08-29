@@ -13,12 +13,19 @@ ZIP_NAME = "assets.zip"
 
 if not os.path.exists("assets"):
     with st.spinner("Downloading assets from Google Drive (one-time setup)..."):
-        url = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
-        gdown.download(url, ZIP_NAME, quiet=False)
-        if os.path.exists(ZIP_NAME):
-            with zipfile.ZipFile(ZIP_NAME, "r") as zip_ref:
-                zip_ref.extractall(".")
-            os.remove(ZIP_NAME)
+        try:
+            # Download using file ID directly with fuzzy mode to bypass Google's warning page
+            downloaded = gdown.download(id=GDRIVE_FILE_ID, output=ZIP_NAME, quiet=False, fuzzy=True)
+            
+            if downloaded and os.path.exists(ZIP_NAME) and os.path.getsize(ZIP_NAME) > 1000:
+                with zipfile.ZipFile(ZIP_NAME, "r") as zip_ref:
+                    zip_ref.extractall(".")
+                os.remove(ZIP_NAME)
+                st.rerun()
+            else:
+                st.error("Google Drive blocked the cloud download. See below for the permanent fix.")
+        except Exception as e:
+            st.error(f"Download failed: {e}")
 
 st.title("⚡ 1-Click Video Rebrander")
 
